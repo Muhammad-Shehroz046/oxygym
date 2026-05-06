@@ -36,6 +36,7 @@ import RoleRoute from './components/routing/RoleRoute'
 
 // import Page from './pages/page'
 import Checkout from './pages/Checkout'
+import ChatBot from './components/ChatBot'
 function App() {
   const { user, loading } = useAuth()
   const [isInitialized, setIsInitialized] = useState(false)
@@ -119,6 +120,7 @@ function App() {
         </Routes>
       </main>
       <Footer />
+      <ChatBot />
       <ToastContainer position="bottom-right" />
     </>
   )

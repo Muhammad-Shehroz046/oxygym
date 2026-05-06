@@ -471,7 +471,7 @@ const trainer = {
 };
 
 const whatsappNumber = trainer.phoneNumber?.replace(/\D/g, '');
-const whatsappLink = `https://wa.me/${whatsappNumber}`;
+const whatsappLink = `https://wa.me/+${whatsappNumber}`;
 
   return (
     <div className="user-dashboard">
