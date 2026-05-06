@@ -1,0 +1,103 @@
+/* .trainer-container {
+  background-color: #1E293B;
+  max-width: 100%;
+  padding: 5%  5%;
+  margin: 50px auto 100px;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 2.2rem;
+  margin-bottom: 30px;
+  font-weight: bold;
+}
+
+.card-grid {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.trainer-card {
+  background: #f5f5f5;
+  border-radius: 15px;
+  padding: 20px;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+.trainer-card:hover {
+  transform: translateY(-5px);
+}
+
+.trainer-image {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.trainer-name {
+  font-size: 1.5rem;
+  margin-top: 15px;
+  color: #222;
+}
+
+.trainer-desc {
+  font-size: 0.95rem;
+  color: #555;
+  margin-top: 10px;
+} */
+
+.trainerContainer {
+  padding: 2rem;
+  background-color: #111;
+  text-align: center;
+}
+
+.sectionTitle {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: white;
+}
+
+.cardGrid {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.trainerCard {
+  background-color: #1e1e1e;
+  border-radius: 15px;
+  overflow: hidden;
+  width: 280px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease;
+}
+
+.trainerCard:hover {
+  transform: scale(1.05);
+}
+
+.trainerImage {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+}
+
+.trainerName {
+  color: #fff;
+  font-size: 1.4rem;
+  margin-top: 1rem;
+}
+
+.trainerDesc {
+  color: #ccc;
+  padding: 0 1rem 1.5rem;
+  font-size: 0.95rem;
+}
