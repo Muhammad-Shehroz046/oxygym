@@ -22,15 +22,17 @@ dotenv.config();
 // Create Express app
 const app = express();
 const httpServer = createServer(app);
+const ALLOWED_ORIGIN = process.env.FRONTEND_URL || '*';
+
 const io = new Server(httpServer, {
   cors: {
-    origin: '*',
+    origin: ALLOWED_ORIGIN,
     methods: ['GET', 'POST', 'PUT', 'DELETE']
   }
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: ALLOWED_ORIGIN }));
 
 // Special middleware for Stripe webhooks (must be before express.json())
 app.use('/api/payments/webhook', express.raw({type: 'application/json'}));

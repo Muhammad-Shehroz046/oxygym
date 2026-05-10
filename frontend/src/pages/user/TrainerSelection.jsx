@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config';
 import { FaStar, FaUserTie } from 'react-icons/fa';
 
 const TrainerSelection = () => {
@@ -21,7 +22,7 @@ const TrainerSelection = () => {
           },
         };
 
-        const { data } = await axios.get('http://localhost:5000/api/users/trainers', config);
+        const { data } = await axios.get(`${API_BASE_URL}/api/users/trainers`, config);
         setTrainers(data);
       } catch (error) {
         toast.error('Failed to fetch trainers');
@@ -52,7 +53,7 @@ const TrainerSelection = () => {
       };
 
       const { data } = await axios.put(
-        'http://localhost:5000/api/users/select-trainer',
+        `${API_BASE_URL}/api/users/select-trainer`,
         { trainerId: selectedTrainer },
         config
       );

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config';
 import { FaUsers, FaUserCircle, FaClipboardList } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import WorkoutPlanModal from './WorkoutPlanModal';
@@ -30,7 +31,7 @@ const TrainerDashboard = () => {
           }
         };
 
-        const { data } = await axios.get('http://localhost:5000/api/trainers/assigned-users', config);
+        const { data } = await axios.get(`${API_BASE_URL}/api/trainers/assigned-users`, config);
         setAssignedUsers(data);
       } catch (error) {
         console.error('Error fetching assigned users:', error);

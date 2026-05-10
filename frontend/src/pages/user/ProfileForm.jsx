@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config';
 import { FaUserAlt, FaWeight, FaRuler, FaBullseye, FaNotesMedical } from 'react-icons/fa';
 
 const ProfileForm = () => {
@@ -65,7 +66,7 @@ const ProfileForm = () => {
       };
       
       const { data } = await axios.put(
-        'http://localhost:5000/api/users/profile',
+        `${API_BASE_URL}/api/users/profile`,
         {
           ...formData,
           medicalConditions: filteredConditions

@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config';
 import { FaUser, FaEnvelope, FaUserTag, FaToggleOn, FaToggleOff, FaArrowLeft, FaSave } from 'react-icons/fa';
 
 const EditUser = () => {
@@ -28,7 +29,7 @@ const EditUser = () => {
           }
         };
         
-        const { data } = await axios.get(`http://localhost:5000/api/admin/users/${id}`, config);
+        const { data } = await axios.get(`${API_BASE_URL}/api/admin/users/${id}`, config);
         
         setFormData({
           name: data.name,
@@ -74,7 +75,7 @@ const EditUser = () => {
       };
       
       await axios.put(
-        `http://localhost:5000/api/admin/users/${id}`, 
+        `${API_BASE_URL}/api/admin/users/${id}`, 
         formData,
         config
       );

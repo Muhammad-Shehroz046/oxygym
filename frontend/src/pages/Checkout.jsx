@@ -8,11 +8,11 @@ import {
   useElements
 } from '@stripe/react-stripe-js';
 
-// Replace with your actual Stripe publishable key
-const STRIPE_PUBLISHABLE_KEY = 'pk_test_51Rb3MQ2enMl6xjggWkpEYgcioiIqnXgFmJTktSgA87wgVPHy8oAy2f8nSOvJrFCY1mNFR05aX04e2TF6icXqZV0n00Mqn9RArc';
-const API_BASE_URL = 'http://localhost:5000';
+import { API_BASE_URL, STRIPE_PUBLISHABLE_KEY } from '../config';
+
 
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
+
 
 const CheckoutForm = ({ plan }) => {
   const stripe = useStripe();

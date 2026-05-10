@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config';
 
 const ChatBot = () => {
   const { user } = useAuth();
@@ -35,7 +36,7 @@ const ChatBot = () => {
 
     try {
       const { data } = await axios.post(
-        'http://localhost:5000/api/chat',
+        `${API_BASE_URL}/api/chat`,
         { messages: updatedMessages },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );

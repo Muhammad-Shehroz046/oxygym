@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config';
 import { FaUsers, FaUserTie, FaUserShield, FaClipboardList, FaEdit, FaTrash, FaSearch } from 'react-icons/fa';
 
 const AdminDashboard = () => {
@@ -26,7 +27,7 @@ const AdminDashboard = () => {
           }
         };
         
-        const { data } = await axios.get('http://localhost:5000/api/admin/users', config);
+        const { data } = await axios.get(`${API_BASE_URL}/api/admin/users`, config);
         setUsers(data);
         
         // Calculate stats
@@ -58,7 +59,7 @@ const AdminDashboard = () => {
           }
         };
         
-        await axios.delete(`http://localhost:5000/api/admin/users/${userId}`, config);
+        await axios.delete(`${API_BASE_URL}/api/admin/users/${userId}`, config);
         
         // Update local state
         setUsers(users.filter(u => u._id !== userId));

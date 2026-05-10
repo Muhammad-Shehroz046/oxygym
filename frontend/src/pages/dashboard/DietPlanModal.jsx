@@ -3,6 +3,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
+import { API_BASE_URL } from "../../config";
 
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -27,7 +28,7 @@ const DietPlanModal = ({ memberId, category, onClose }) => {
   const handleSubmit = async () => {
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/diet-plans",
+        `${API_BASE_URL}/api/diet-plans`,
         {
           memberId,
           category,

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -18,7 +19,7 @@ export default function DietPlanModal({ onClose }) {
   useEffect(() => {
     const fetchDietPlan = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/diet-plans/user/${user._id}`);
+        const res = await axios.get(`${API_BASE_URL}/api/diet-plans/user/${user._id}`);
         const mapped = {};
 
         res.data.dietPlan.forEach((entry) => {

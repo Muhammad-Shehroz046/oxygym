@@ -414,6 +414,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -504,7 +505,7 @@ useEffect(() => {
 
     try {
       await axios.post(
-        'http://localhost:5000/api/plan/save',
+        `${API_BASE_URL}/api/plan/save`,
         {
           userEmail: targetUserEmail,
           // category,

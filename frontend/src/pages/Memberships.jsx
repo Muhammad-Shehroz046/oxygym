@@ -4,6 +4,7 @@ import { FaCheck, FaTimes, FaArrowRight } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 import '../assets/css/Membership.css';
 
 const Memberships = () => {
@@ -79,7 +80,7 @@ const Memberships = () => {
         },
       };
       const response = await axios.post(
-        'http://localhost:5000/api/membership/validate-email',
+        `${API_BASE_URL}/api/membership/validate-email`,
         { email: user.email },
         config
       );

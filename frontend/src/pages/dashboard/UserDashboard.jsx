@@ -20,7 +20,7 @@
 //           }
 //         };
 
-//         const { data } = await axios.get('http://localhost:5000/api/users/profile', config);
+//         const { data } = await axios.get('${API_BASE_URL}/api/users/profile', config);
 //         setProfile(data);
 //       } catch (error) {
 //         console.error('Error fetching profile:', error);
@@ -397,6 +397,7 @@ import { useAuth } from '../../context/AuthContext';
 import { FaDumbbell, FaUser, FaWeight, FaRuler, FaBullseye } from 'react-icons/fa';
 import WorkoutPlanModal from './WorkoutPlanModal';
 import DietPlanModal from './DietPlanModalMemberDsh';
+import { API_BASE_URL } from '../../config';
 
 
 const UserDashboard = () => {
@@ -420,17 +421,17 @@ const [showDietModal, setShowDietModal] = useState(false);
             Authorization: `Bearer ${user.token}`
           }
         };
-        const { data } = await axios.get('http://localhost:5000/api/users/profile', config);
+        const { data } = await axios.get('${API_BASE_URL}/api/users/profile', config);
         setProfile(data);
         try {
-  const dietRes = await axios.get(`http://localhost:5000/api/diet-plans/user/${data._id}`);
+  const dietRes = await axios.get(`${API_BASE_URL}/api/diet-plans/user/${data._id}`);
   setDietPlan(dietRes.data.dietPlan); // This should be an array of days
 } catch (err) {
   console.error("Diet plan not found or failed to load:", err);
 }
 
         try {
-  const response = await axios.get(`http://localhost:5000/api/plan/${data.email}`);
+  const response = await axios.get(`${API_BASE_URL}/api/plan/${data.email}`);
   setUserPlan(response.data.plan); // plan contains { Monday: {...}, ... }
 } catch (err) {
   console.error('Workout plan not found or failed to load:', err);
