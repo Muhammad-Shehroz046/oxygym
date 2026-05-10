@@ -1,5 +1,5 @@
 import React from 'react';
-import QRCode from 'qrcode.react';
+import { QRCodeSVG as QRCode } from 'qrcode.react';
 
 export default function WhatsAppQR({ phoneNumber }) {
   const whatsappLink = `https://wa.me/${phoneNumber.replace(/\D/g, '')}`;
