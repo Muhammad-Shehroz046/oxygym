@@ -20,7 +20,7 @@
 //           }
 //         };
 
-//         const { data } = await axios.get('${API_BASE_URL}/api/users/profile', config);
+//         const { data } = await axios.get(`${API_BASE_URL}/api/users/profile`, config);
 //         setProfile(data);
 //       } catch (error) {
 //         console.error('Error fetching profile:', error);
@@ -421,7 +421,7 @@ const [showDietModal, setShowDietModal] = useState(false);
             Authorization: `Bearer ${user.token}`
           }
         };
-        const { data } = await axios.get('${API_BASE_URL}/api/users/profile', config);
+        const { data } = await axios.get(`${API_BASE_URL}/api/users/profile`, config);
         setProfile(data);
         try {
   const dietRes = await axios.get(`${API_BASE_URL}/api/diet-plans/user/${data._id}`);
