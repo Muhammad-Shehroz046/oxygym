@@ -4,7 +4,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../config';
-import { FaUsers, FaUserTie, FaUserShield, FaClipboardList, FaEdit, FaTrash, FaSearch, FaCheck, FaTimes, FaClock } from 'react-icons/fa';
+import { FaUsers, FaUserTie, FaUserShield, FaClipboardList, FaEdit, FaTrash, FaSearch, FaCheck, FaTimes, FaClock, FaCreditCard } from 'react-icons/fa';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -184,6 +184,9 @@ const AdminDashboard = () => {
         <div className="admin-actions">
           <Link to="/admin/users" className="btn btn-primary">
             <FaClipboardList /> Manage Users
+          </Link>
+          <Link to="/admin/memberships" className="btn btn-accent">
+            <FaCreditCard /> Membership Records
           </Link>
         </div>
 

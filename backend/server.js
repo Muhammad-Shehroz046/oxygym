@@ -13,6 +13,7 @@ import membershipRoutes from './routes/membershipRoutes.js'
 import workoutPlanRoutes from './routes/workoutPlanRoutes.js';
 import dietRoutes from './routes/dietPlanModal.js';
 import chatRoutes from './routes/chatRoutes.js';
+import membershipRecordRoutes from './routes/membershipRecordRoutes.js';
 
 
 
@@ -55,6 +56,7 @@ app.use('/api/membership', membershipRoutes);
 app.use('/api/plan', workoutPlanRoutes);
 app.use("/api/diet-plans", dietRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/membership-records', membershipRecordRoutes);
 
 
 // Health check endpoint

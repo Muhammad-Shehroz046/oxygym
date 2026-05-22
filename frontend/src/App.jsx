@@ -28,6 +28,7 @@ import TrainerSelection from './pages/user/TrainerSelection'
 // Admin pages
 import UsersList from './pages/admin/UsersList'
 import EditUser from './pages/admin/EditUser'
+import AdminMemberships from './pages/admin/AdminMemberships'
 
 // Route guards
 import ProtectedRoute from './components/routing/ProtectedRoute'
@@ -112,6 +113,11 @@ function App() {
           <Route path="/admin/users/:id/edit" element={
             <RoleRoute role="admin">
               <EditUser />
+            </RoleRoute>
+          } />
+          <Route path="/admin/memberships" element={
+            <RoleRoute role="admin">
+              <AdminMemberships />
             </RoleRoute>
           } />
 

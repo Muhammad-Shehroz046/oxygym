@@ -7,7 +7,7 @@ import {
   useStripe,
   useElements
 } from '@stripe/react-stripe-js';
-
+import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL, STRIPE_PUBLISHABLE_KEY } from '../config';
 
 
@@ -18,12 +18,13 @@ const CheckoutForm = ({ plan }) => {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [customerInfo, setCustomerInfo] = useState({
-    name: '',
-    email: '',
-    phone: ''
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || ''
   });
 
   const handleInputChange = (e) => {
@@ -88,9 +89,29 @@ const CheckoutForm = ({ plan }) => {
       if (stripeError) {
         setError(stripeError.message);
       } else if (paymentIntent.status === 'succeeded') {
-        // Payment successful
+        // Save membership record
+        try {
+          await fetch(`${API_BASE_URL}/api/membership-records`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${user?.token}`
+            },
+            body: JSON.stringify({
+              planName: plan.name,
+              billingPeriod: plan.billingPeriod,
+              amount: plan.price,
+              stripePaymentIntentId: paymentIntent.id,
+              userName: customerInfo.name,
+              userEmail: customerInfo.email,
+              userPhone: customerInfo.phone
+            })
+          });
+        } catch (recordErr) {
+          console.error('Failed to save membership record:', recordErr);
+        }
         alert('Payment successful! Welcome to your new membership!');
-        navigate('/user/profile-form'); // Redirect to dashboard or success page
+        navigate('/user/profile-form');
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
