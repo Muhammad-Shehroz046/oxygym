@@ -4,6 +4,17 @@ import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// Get all pending (unapproved) users
+router.get('/pending', protect, admin, async (req, res) => {
+  try {
+    const pendingUsers = await User.find({ isApproved: { $ne: true } }).select('-password -__v');
+    res.json(pendingUsers);
+  } catch (error) {
+    console.error('Error fetching pending users:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Get all users
 router.get('/users', protect, admin, async (req, res) => {
   try {
@@ -67,20 +78,24 @@ router.post('/users', protect, admin, async (req, res) => {
 // Update user
 router.put('/users/:id', protect, admin, async (req, res) => {
   try {
-    const { name, email, role, isProfileComplete } = req.body;
-    
+    const { name, email, role, isProfileComplete, isApproved } = req.body;
+
     const user = await User.findById(req.params.id);
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     user.name = name || user.name;
     user.email = email || user.email;
     user.role = role || user.role;
-    
+
     if (isProfileComplete !== undefined) {
       user.isProfileComplete = isProfileComplete;
+    }
+
+    if (isApproved !== undefined) {
+      user.isApproved = isApproved;
     }
     
     const updatedUser = await user.save();

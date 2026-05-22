@@ -4,7 +4,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../config';
-import { FaPlus, FaEdit, FaTrash, FaSearch, FaFilter, FaArrowLeft } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaFilter, FaArrowLeft, FaCheck, FaTimes } from 'react-icons/fa';
 
 const UsersList = () => {
   const { user } = useAuth();
@@ -35,6 +35,30 @@ const UsersList = () => {
     }
   };
   
+  const handleApprove = async (userId) => {
+    try {
+      const config = { headers: { Authorization: `Bearer ${user.token}` } };
+      await axios.put(`${API_BASE_URL}/api/admin/users/${userId}`, { isApproved: true }, config);
+      setUsers(users.map(u => u._id === userId ? { ...u, isApproved: true } : u));
+      toast.success('User approved');
+    } catch (error) {
+      toast.error('Failed to approve user');
+    }
+  };
+
+  const handleReject = async (userId) => {
+    if (window.confirm('Reject and permanently delete this registration?')) {
+      try {
+        const config = { headers: { Authorization: `Bearer ${user.token}` } };
+        await axios.delete(`${API_BASE_URL}/api/admin/users/${userId}`, config);
+        setUsers(users.filter(u => u._id !== userId));
+        toast.success('User rejected and removed');
+      } catch (error) {
+        toast.error('Failed to reject user');
+      }
+    }
+  };
+
   const handleDeleteUser = async (userId) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
@@ -126,6 +150,7 @@ const UsersList = () => {
                     <th>Name</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Approval</th>
                     <th>Profile Status</th>
                     <th>Date Joined</th>
                     <th>Actions</th>
@@ -147,6 +172,13 @@ const UsersList = () => {
                         </span>
                       </td>
                       <td>
+                        {u.isApproved ? (
+                          <span className="status-badge complete">Approved</span>
+                        ) : (
+                          <span className="status-badge pending-approval">Pending</span>
+                        )}
+                      </td>
+                      <td>
                         {u.isProfileComplete ? (
                           <span className="status-badge complete">Complete</span>
                         ) : (
@@ -156,8 +188,26 @@ const UsersList = () => {
                       <td>{new Date(u.createdAt).toLocaleDateString()}</td>
                       <td>
                         <div className="action-buttons">
-                          <Link 
-                            to={`/admin/users/${u._id}/edit`} 
+                          {!u.isApproved && u.role !== 'admin' && (
+                            <>
+                              <button
+                                className="btn-icon approve"
+                                onClick={() => handleApprove(u._id)}
+                                title="Approve"
+                              >
+                                <FaCheck />
+                              </button>
+                              <button
+                                className="btn-icon reject"
+                                onClick={() => handleReject(u._id)}
+                                title="Reject"
+                              >
+                                <FaTimes />
+                              </button>
+                            </>
+                          )}
+                          <Link
+                            to={`/admin/users/${u._id}/edit`}
                             className="btn-icon edit"
                             title="Edit User"
                           >
@@ -167,7 +217,7 @@ const UsersList = () => {
                             className="btn-icon delete"
                             onClick={() => handleDeleteUser(u._id)}
                             title="Delete User"
-                            disabled={u._id === user._id} // Prevent self-deletion
+                            disabled={u._id === user._id}
                           >
                             <FaTrash />
                           </button>
@@ -391,22 +441,43 @@ const UsersList = () => {
         .btn-icon.edit {
           background-color: var(--primary-color);
         }
-        
+
         .btn-icon.edit:hover {
           background-color: var(--primary-dark);
         }
-        
+
         .btn-icon.delete {
           background-color: var(--danger-color);
         }
-        
+
         .btn-icon.delete:hover:not(:disabled) {
           background-color: #dc2626;
         }
-        
+
         .btn-icon:disabled {
           opacity: 0.5;
           cursor: not-allowed;
+        }
+
+        .btn-icon.approve {
+          background-color: var(--success-color);
+        }
+
+        .btn-icon.approve:hover {
+          background-color: #16a34a;
+        }
+
+        .btn-icon.reject {
+          background-color: #f97316;
+        }
+
+        .btn-icon.reject:hover {
+          background-color: #ea580c;
+        }
+
+        .status-badge.pending-approval {
+          background-color: rgba(124, 58, 237, 0.1);
+          color: #7c3aed;
         }
         
         .no-results {

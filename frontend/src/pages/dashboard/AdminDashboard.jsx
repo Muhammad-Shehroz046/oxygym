@@ -4,7 +4,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../config';
-import { FaUsers, FaUserTie, FaUserShield, FaClipboardList, FaEdit, FaTrash, FaSearch } from 'react-icons/fa';
+import { FaUsers, FaUserTie, FaUserShield, FaClipboardList, FaEdit, FaTrash, FaSearch, FaCheck, FaTimes, FaClock } from 'react-icons/fa';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -17,7 +17,48 @@ const AdminDashboard = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
-  
+  const [pendingUsers, setPendingUsers] = useState([]);
+  const [pendingLoading, setPendingLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPendingUsers = async () => {
+      try {
+        const config = { headers: { Authorization: `Bearer ${user.token}` } };
+        const { data } = await axios.get(`${API_BASE_URL}/api/admin/pending`, config);
+        setPendingUsers(data);
+      } catch (error) {
+        console.error('Error fetching pending users:', error);
+      } finally {
+        setPendingLoading(false);
+      }
+    };
+    fetchPendingUsers();
+  }, [user.token]);
+
+  const handleApprove = async (userId) => {
+    try {
+      const config = { headers: { Authorization: `Bearer ${user.token}` } };
+      await axios.put(`${API_BASE_URL}/api/admin/users/${userId}`, { isApproved: true }, config);
+      setPendingUsers(pendingUsers.filter(u => u._id !== userId));
+      toast.success('User approved successfully');
+    } catch (error) {
+      toast.error('Failed to approve user');
+    }
+  };
+
+  const handleReject = async (userId) => {
+    if (window.confirm('Are you sure you want to reject and delete this registration?')) {
+      try {
+        const config = { headers: { Authorization: `Bearer ${user.token}` } };
+        await axios.delete(`${API_BASE_URL}/api/admin/users/${userId}`, config);
+        setPendingUsers(pendingUsers.filter(u => u._id !== userId));
+        toast.success('User rejected and removed');
+      } catch (error) {
+        toast.error('Failed to reject user');
+      }
+    }
+  };
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -144,6 +185,66 @@ const AdminDashboard = () => {
           <Link to="/admin/users" className="btn btn-primary">
             <FaClipboardList /> Manage Users
           </Link>
+        </div>
+
+        {/* Pending Approvals Section */}
+        <div className="pending-section">
+          <div className="pending-header">
+            <h2><FaClock /> Pending Approvals {pendingUsers.length > 0 && <span className="pending-badge">{pendingUsers.length}</span>}</h2>
+          </div>
+          {pendingLoading ? (
+            <p className="pending-loading">Loading pending requests...</p>
+          ) : pendingUsers.length === 0 ? (
+            <p className="pending-empty">No pending registration requests.</p>
+          ) : (
+            <div className="pending-table-wrapper">
+              <table className="users-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>Registered</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingUsers.map((u) => (
+                    <tr key={u._id}>
+                      <td>{u.name}</td>
+                      <td>{u.email}</td>
+                      <td>{u.phone}</td>
+                      <td>
+                        <span className={`role-badge ${u.role}`}>
+                          {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
+                        </span>
+                      </td>
+                      <td>{new Date(u.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        <div className="action-buttons">
+                          <button
+                            className="btn-icon approve"
+                            onClick={() => handleApprove(u._id)}
+                            title="Approve"
+                          >
+                            <FaCheck />
+                          </button>
+                          <button
+                            className="btn-icon reject"
+                            onClick={() => handleReject(u._id)}
+                            title="Reject"
+                          >
+                            <FaTimes />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
         
         <div className="users-table-container">
@@ -486,6 +587,64 @@ const AdminDashboard = () => {
           text-align: center;
           padding: 2rem;
           color: var(--gray-500);
+        }
+
+        .pending-section {
+          background-color: white;
+          border-radius: 8px;
+          box-shadow: var(--box-shadow);
+          margin-bottom: 2rem;
+          overflow: hidden;
+        }
+
+        .pending-header {
+          padding: 1.25rem 1.5rem;
+          background-color: #7c3aed;
+          color: white;
+        }
+
+        .pending-header h2 {
+          font-size: 1.2rem;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .pending-badge {
+          background-color: #ef4444;
+          color: white;
+          border-radius: 999px;
+          padding: 0.1rem 0.6rem;
+          font-size: 0.85rem;
+          font-weight: 700;
+        }
+
+        .pending-loading,
+        .pending-empty {
+          padding: 1.5rem;
+          color: var(--gray-500);
+          text-align: center;
+        }
+
+        .pending-table-wrapper {
+          overflow-x: auto;
+        }
+
+        .btn-icon.approve {
+          background-color: var(--success-color);
+        }
+
+        .btn-icon.approve:hover {
+          background-color: #16a34a;
+        }
+
+        .btn-icon.reject {
+          background-color: var(--danger-color);
+        }
+
+        .btn-icon.reject:hover {
+          background-color: #dc2626;
         }
         
         @media (max-width: 768px) {

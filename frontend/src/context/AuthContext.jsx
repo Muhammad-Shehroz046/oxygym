@@ -54,6 +54,10 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const { data } = await axios.post(`${API_BASE_URL}/api/auth/register`, userData);
+      // Pending users (member/trainer) don't get logged in — admin must approve first
+      if (data.pending) {
+        return data;
+      }
       localStorage.setItem('user', JSON.stringify(data));
       setUser(data);
       return data;

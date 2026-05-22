@@ -63,6 +63,12 @@
           role
         });
 
+        if (userData.pending) {
+          toast.success('Registration submitted! Your account is pending admin approval. You can login once approved.');
+          navigate('/login');
+          return;
+        }
+
         toast.success(`Registration successful as ${role}!`);
 
         if (userData.role === 'admin') {

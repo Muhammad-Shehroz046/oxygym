@@ -15,18 +15,30 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Email or phone already exists' });
     }
 
+    // Admins are auto-approved; members and trainers need admin approval
+    const isApproved = role === 'admin';
+
     // Create new user
     const user = new User({
       name,
       email,
       password,
-      phone, // ✅ pass phone
-      role
+      phone,
+      role,
+      isApproved
     });
 
     await user.save();
 
-    // Create and sign JWT
+    // Members and trainers must wait for admin approval before they can login
+    if (!isApproved) {
+      return res.status(201).json({
+        pending: true,
+        message: 'Registration successful! Your account is pending admin approval. You will be able to login once approved.'
+      });
+    }
+
+    // Admin gets a token immediately
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -63,7 +75,12 @@ router.post('/login', async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
-    
+
+    // Block login if admin has not approved the account (admins are always allowed)
+    if (user.role !== 'admin' && !user.isApproved) {
+      return res.status(403).json({ message: 'Your account is pending admin approval. Please wait until an admin approves your registration.' });
+    }
+
     // Create and sign JWT
     const token = jwt.sign(
       { id: user._id, role: user.role },
