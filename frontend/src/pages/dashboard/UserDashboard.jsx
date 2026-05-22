@@ -394,9 +394,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import { FaDumbbell, FaUser, FaWeight, FaRuler, FaBullseye } from 'react-icons/fa';
+import { FaDumbbell, FaUser, FaWeight, FaRuler, FaBullseye, FaFire, FaCalendarCheck, FaChartLine } from 'react-icons/fa';
 import WorkoutPlanModal from './WorkoutPlanModal';
 import DietPlanModal from './DietPlanModalMemberDsh';
+import ProgressCalendar from '../../components/ProgressCalendar';
+import DailyLogModal from '../../components/DailyLogModal';
 import { API_BASE_URL } from '../../config';
 
 
@@ -409,6 +411,9 @@ const UserDashboard = () => {
   const [dietPlan, setDietPlan] = useState([]);
 const [currentDay, setCurrentDay] = useState(0);
 const [showDietModal, setShowDietModal] = useState(false);
+const [logs, setLogs] = useState([]);
+const [logModalDate, setLogModalDate] = useState(null);
+const [logModalExisting, setLogModalExisting] = useState(null);
 
 
 
@@ -437,6 +442,13 @@ const [showDietModal, setShowDietModal] = useState(false);
   console.error('Workout plan not found or failed to load:', err);
 }
         
+        // Fetch daily logs
+        try {
+          const logsRes = await axios.get(`${API_BASE_URL}/api/daily-logs/my`, config);
+          setLogs(logsRes.data);
+        } catch (err) {
+          console.error('Logs fetch error:', err);
+        }
       }
        catch (error) {
         console.error('Error fetching profile:', error);
@@ -473,6 +485,58 @@ const trainer = {
 
 const whatsappNumber = trainer.phoneNumber?.replace(/\D/g, '');
 const whatsappLink = `https://wa.me/+${whatsappNumber}`;
+
+  // --- Progress helpers ---
+  const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const todayDow = DAY_NAMES[today.getDay()];
+
+  const todayLog = logs.find(l => l.date === todayStr);
+  const completedLogs = logs.filter(l => l.workout?.status === 'completed').length;
+  const thisWeekLogs = logs.filter(l => {
+    const d = new Date(l.date);
+    const wStart = new Date(today); wStart.setDate(today.getDate() - today.getDay());
+    return d >= wStart;
+  });
+  const weekRate = thisWeekLogs.length
+    ? Math.round((thisWeekLogs.filter(l => l.workout?.status === 'completed').length / thisWeekLogs.length) * 100) : 0;
+
+  let streak = 0;
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const log = logs.find(l => l.date === key);
+    if (log && (log.workout?.status === 'completed' || log.workout?.status === 'partial')) streak++;
+    else break;
+  }
+
+  const handleDayClick = (dateStr, existingLog) => {
+    setLogModalDate(dateStr);
+    setLogModalExisting(existingLog || null);
+  };
+
+  const handleSaveLog = async (payload) => {
+    try {
+      const config = { headers: { Authorization: `Bearer ${user.token}` } };
+      const { data } = await axios.post(`${API_BASE_URL}/api/daily-logs`, payload, config);
+      setLogs(prev => {
+        const filtered = prev.filter(l => l.date !== data.date);
+        return [...filtered, data];
+      });
+    } catch (err) {
+      console.error('Error saving log:', err);
+    }
+  };
+
+  // Get the plan for a given date (day of week)
+  const getPlanForDate = (dateStr) => {
+    const dow = DAY_NAMES[new Date(dateStr + 'T12:00:00').getDay()];
+    const workoutDay = userPlan?.[dow] || null;
+    const dietDayIdx = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].indexOf(dow);
+    const dietDay = Array.isArray(dietPlan) ? dietPlan[dietDayIdx] : null;
+    return { workoutDay, dietDay };
+  };
 
   return (
     <div className="user-dashboard">
@@ -630,6 +694,63 @@ const whatsappLink = `https://wa.me/+${whatsappNumber}`;
         </div>
       </div>
 
+      {/* ── Progress Section ── */}
+      <div className="progress-section">
+        <h2 className="progress-heading"><FaChartLine /> My Progress</h2>
+
+        {/* Quick stats */}
+        <div className="progress-stats-row">
+          <div className="prog-stat orange">
+            <FaFire className="prog-stat-icon" />
+            <div>
+              <div className="prog-stat-value">{streak}</div>
+              <div className="prog-stat-label">Day Streak</div>
+            </div>
+          </div>
+          <div className="prog-stat green">
+            <FaCalendarCheck className="prog-stat-icon" />
+            <div>
+              <div className="prog-stat-value">{weekRate}%</div>
+              <div className="prog-stat-label">This Week</div>
+            </div>
+          </div>
+          <div className="prog-stat blue">
+            <FaDumbbell className="prog-stat-icon" />
+            <div>
+              <div className="prog-stat-value">{completedLogs}</div>
+              <div className="prog-stat-label">Total Completed</div>
+            </div>
+          </div>
+          <div className="prog-stat teal">
+            <FaUser className="prog-stat-icon" />
+            <div>
+              <div className="prog-stat-value">{logs.length}</div>
+              <div className="prog-stat-label">Days Logged</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Log Today CTA */}
+        <div className="log-today-bar">
+          <div>
+            <strong>Today is {todayDow}</strong>
+            {todayLog ? (
+              <span className="today-logged">
+                {' '} — Workout: <b>{todayLog.workout?.status}</b> · Diet: <b>{todayLog.diet?.status}</b>
+              </span>
+            ) : (
+              <span className="today-not-logged"> — Not logged yet</span>
+            )}
+          </div>
+          <button className="btn-log-today" onClick={() => handleDayClick(todayStr, todayLog)}>
+            {todayLog ? 'Edit Today\'s Log' : 'Log Today'}
+          </button>
+        </div>
+
+        {/* Calendar */}
+        <ProgressCalendar logs={logs} onDayClick={handleDayClick} />
+      </div>
+
       {/* Workout Modal */}
       {showWorkoutModal && (
   <WorkoutPlanModal
@@ -647,6 +768,20 @@ const whatsappLink = `https://wa.me/+${whatsappNumber}`;
     onClose={() => setShowDietModal(false)}
   />
 )}
+
+      {logModalDate && (() => {
+        const { workoutDay, dietDay } = getPlanForDate(logModalDate);
+        return (
+          <DailyLogModal
+            date={logModalDate}
+            existingLog={logModalExisting}
+            workoutDayPlan={workoutDay}
+            dietDayPlan={dietDay}
+            onSave={handleSaveLog}
+            onClose={() => { setLogModalDate(null); setLogModalExisting(null); }}
+          />
+        );
+      })()}
 
             <style jsx>{`
         .user-dashboard {
@@ -862,6 +997,85 @@ const whatsappLink = `https://wa.me/+${whatsappNumber}`;
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
+
+        /* Progress section */
+        .progress-section {
+          margin-top: 2.5rem;
+        }
+        .progress-heading {
+          font-size: 1.5rem;
+          color: var(--primary-dark);
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 1.25rem;
+        }
+        .progress-stats-row {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 1rem;
+          margin-bottom: 1.25rem;
+        }
+        .prog-stat {
+          background: white;
+          border-radius: 12px;
+          padding: 1.1rem 1.25rem;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          box-shadow: var(--box-shadow);
+          border-left: 4px solid transparent;
+        }
+        .prog-stat.orange { border-left-color: #f97316; }
+        .prog-stat.green  { border-left-color: #16a34a; }
+        .prog-stat.blue   { border-left-color: #1e40af; }
+        .prog-stat.teal   { border-left-color: #0d9488; }
+        .prog-stat-icon {
+          font-size: 1.4rem;
+        }
+        .prog-stat.orange .prog-stat-icon { color: #f97316; }
+        .prog-stat.green  .prog-stat-icon { color: #16a34a; }
+        .prog-stat.blue   .prog-stat-icon { color: #1e40af; }
+        .prog-stat.teal   .prog-stat-icon { color: #0d9488; }
+        .prog-stat-value {
+          font-size: 1.6rem;
+          font-weight: 700;
+          color: var(--dark-color);
+          line-height: 1;
+        }
+        .prog-stat-label {
+          font-size: 0.8rem;
+          color: var(--gray-500);
+          margin-top: 0.2rem;
+        }
+        .log-today-bar {
+          background: white;
+          border-radius: 12px;
+          padding: 1rem 1.25rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+          box-shadow: var(--box-shadow);
+          margin-bottom: 1.25rem;
+          font-size: 0.95rem;
+        }
+        .today-logged { color: var(--success-color); }
+        .today-not-logged { color: var(--warning-color); }
+        .btn-log-today {
+          background: #0d9488;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          padding: 0.55rem 1.25rem;
+          font-size: 0.9rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s;
+          white-space: nowrap;
+        }
+        .btn-log-today:hover { background: #0f766e; }
       `}</style>
     </div>
   );

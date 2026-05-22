@@ -14,6 +14,7 @@ import workoutPlanRoutes from './routes/workoutPlanRoutes.js';
 import dietRoutes from './routes/dietPlanModal.js';
 import chatRoutes from './routes/chatRoutes.js';
 import membershipRecordRoutes from './routes/membershipRecordRoutes.js';
+import dailyLogRoutes from './routes/dailyLogRoutes.js';
 
 
 
@@ -57,6 +58,7 @@ app.use('/api/plan', workoutPlanRoutes);
 app.use("/api/diet-plans", dietRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/membership-records', membershipRecordRoutes);
+app.use('/api/daily-logs', dailyLogRoutes);
 
 
 // Health check endpoint

@@ -3,7 +3,9 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../config';
-import { FaUsers, FaUserCircle, FaClipboardList } from 'react-icons/fa';
+import { FaUsers, FaUserCircle, FaClipboardList, FaFire, FaCalendarCheck, FaDumbbell, FaChartBar } from 'react-icons/fa';
+import ProgressCalendar from '../../components/ProgressCalendar';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import WorkoutPlanModal from './WorkoutPlanModal';
 import DietPlanModal from './DietPlanModal';
@@ -17,6 +19,9 @@ const TrainerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [memberPlans, setMemberPlans] = useState({});
   const [showDietModal, setShowDietModal] = useState(false);
+  const [clientLogs, setClientLogs] = useState([]);
+  const [clientStats, setClientStats] = useState(null);
+  const [progressTab, setProgressTab] = useState('overview'); // 'overview' | 'calendar'
 
 
 
@@ -44,8 +49,22 @@ const TrainerDashboard = () => {
     fetchAssignedUsers();
   }, [user.token]);
 
-  const handleUserSelect = (user) => {
-    setSelectedUser(user);
+  const handleUserSelect = async (assignedUser) => {
+    setSelectedUser(assignedUser);
+    setClientLogs([]);
+    setClientStats(null);
+    setProgressTab('overview');
+    try {
+      const config = { headers: { Authorization: `Bearer ${user.token}` } };
+      const [logsRes, statsRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/api/daily-logs/user/${assignedUser._id}`, config),
+        axios.get(`${API_BASE_URL}/api/daily-logs/user/${assignedUser._id}/stats`, config)
+      ]);
+      setClientLogs(logsRes.data);
+      setClientStats(statsRes.data);
+    } catch (err) {
+      console.error('Error fetching client progress:', err);
+    }
   };
 
 
@@ -176,20 +195,101 @@ const TrainerDashboard = () => {
                 </div>
 
                 <div className="user-actions">
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => setShowModal(true)}
-                  >
+                  <button className="btn btn-primary" onClick={() => setShowModal(true)}>
                     Create Workout Plan
                   </button>
-
-                  <button
-                    className="btn btn-outline"
-                    onClick={() => setShowDietModal(true)}
-                  >
+                  <button className="btn btn-outline" onClick={() => setShowDietModal(true)}>
                     Create Diet Plan
                   </button>
+                </div>
 
+                {/* ── Client Progress ── */}
+                <div className="progress-panel">
+                  <div className="progress-panel-header">
+                    <FaChartBar /> Client Progress
+                  </div>
+
+                  {/* Stats row */}
+                  {clientStats ? (
+                    <>
+                      <div className="cp-stats-row">
+                        <div className="cp-stat orange">
+                          <FaFire className="cp-icon" />
+                          <div>
+                            <div className="cp-val">{clientStats.streak}</div>
+                            <div className="cp-lbl">Streak</div>
+                          </div>
+                        </div>
+                        <div className="cp-stat green">
+                          <FaCalendarCheck className="cp-icon" />
+                          <div>
+                            <div className="cp-val">{clientStats.weekRate}%</div>
+                            <div className="cp-lbl">This Week</div>
+                          </div>
+                        </div>
+                        <div className="cp-stat blue">
+                          <FaDumbbell className="cp-icon" />
+                          <div>
+                            <div className="cp-val">{clientStats.completed}</div>
+                            <div className="cp-lbl">Completed</div>
+                          </div>
+                        </div>
+                        <div className="cp-stat red">
+                          <FaUsers className="cp-icon" />
+                          <div>
+                            <div className="cp-val">{clientStats.missed}</div>
+                            <div className="cp-lbl">Missed</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tab bar */}
+                      <div className="cp-tabs">
+                        <button className={`cp-tab ${progressTab === 'overview' ? 'active' : ''}`} onClick={() => setProgressTab('overview')}>Overview Chart</button>
+                        <button className={`cp-tab ${progressTab === 'calendar' ? 'active' : ''}`} onClick={() => setProgressTab('calendar')}>Calendar</button>
+                        <button className={`cp-tab ${progressTab === 'logs' ? 'active' : ''}`} onClick={() => setProgressTab('logs')}>Recent Logs</button>
+                      </div>
+
+                      {progressTab === 'overview' && clientStats.weeklyData?.length > 0 && (
+                        <div className="cp-chart">
+                          <ResponsiveContainer width="100%" height={200}>
+                            <BarChart data={clientStats.weeklyData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                              <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                              <Tooltip />
+                              <Legend wrapperStyle={{ fontSize: '0.8rem' }} />
+                              <Bar dataKey="completed" fill="#16a34a" radius={[3,3,0,0]} name="Completed" stackId="a" />
+                              <Bar dataKey="partial"   fill="#ca8a04" radius={[3,3,0,0]} name="Partial"   stackId="a" />
+                              <Bar dataKey="missed"    fill="#dc2626" radius={[3,3,0,0]} name="Missed"    stackId="a" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      )}
+
+                      {progressTab === 'calendar' && (
+                        <div style={{ marginTop: '0.75rem' }}>
+                          <ProgressCalendar logs={clientLogs} readOnly={true} />
+                        </div>
+                      )}
+
+                      {progressTab === 'logs' && (
+                        <div className="recent-logs">
+                          {clientLogs.slice(0, 10).map(log => (
+                            <div key={log._id} className="log-row">
+                              <span className="log-date">{new Date(log.date + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' })}</span>
+                              <span className={`log-badge ws-${log.workout?.status}`}>{log.workout?.status}</span>
+                              <span className={`log-badge ds-${log.diet?.status}`}>{log.diet?.status}</span>
+                              {log.mood && <span className="log-mood">{{'great':'😄','good':'🙂','okay':'😐','tired':'😴','sick':'🤒'}[log.mood]}</span>}
+                            </div>
+                          ))}
+                          {clientLogs.length === 0 && <p className="no-logs">No logs yet from this client.</p>}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="no-logs">Loading progress data…</p>
+                  )}
                 </div>
 
                 {showModal && (
@@ -422,6 +522,101 @@ const TrainerDashboard = () => {
             grid-template-columns: 1fr;
           }
         }
+
+        /* Client progress panel */
+        .progress-panel {
+          margin-top: 1.5rem;
+          border-top: 1px solid var(--gray-200);
+          padding-top: 1.25rem;
+        }
+        .progress-panel-header {
+          font-size: 1rem;
+          font-weight: 700;
+          color: var(--secondary-color);
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 1rem;
+        }
+        .cp-stats-row {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 0.6rem;
+          margin-bottom: 1rem;
+        }
+        .cp-stat {
+          background: var(--gray-100);
+          border-radius: 10px;
+          padding: 0.7rem 0.75rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          border-left: 3px solid transparent;
+        }
+        .cp-stat.orange { border-left-color: #f97316; }
+        .cp-stat.green  { border-left-color: #16a34a; }
+        .cp-stat.blue   { border-left-color: #1e40af; }
+        .cp-stat.red    { border-left-color: #dc2626; }
+        .cp-icon { font-size: 1rem; }
+        .cp-stat.orange .cp-icon { color: #f97316; }
+        .cp-stat.green  .cp-icon { color: #16a34a; }
+        .cp-stat.blue   .cp-icon { color: #1e40af; }
+        .cp-stat.red    .cp-icon { color: #dc2626; }
+        .cp-val  { font-size: 1.3rem; font-weight: 700; color: var(--dark-color); line-height: 1; }
+        .cp-lbl  { font-size: 0.72rem; color: var(--gray-500); }
+
+        .cp-tabs {
+          display: flex;
+          gap: 0.5rem;
+          margin-bottom: 0.75rem;
+          flex-wrap: wrap;
+        }
+        .cp-tab {
+          padding: 0.35rem 0.9rem;
+          border-radius: 6px;
+          border: 1.5px solid var(--gray-300);
+          background: white;
+          cursor: pointer;
+          font-size: 0.82rem;
+          font-family: inherit;
+          transition: all 0.2s;
+        }
+        .cp-tab.active {
+          background: var(--secondary-color);
+          color: white;
+          border-color: var(--secondary-color);
+        }
+        .cp-chart { margin-top: 0.5rem; }
+
+        .recent-logs {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+          margin-top: 0.5rem;
+        }
+        .log-row {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: var(--gray-100);
+          padding: 0.45rem 0.75rem;
+          border-radius: 8px;
+          font-size: 0.82rem;
+        }
+        .log-date { font-weight: 600; color: var(--gray-700); min-width: 110px; }
+        .log-badge {
+          padding: 0.1rem 0.55rem;
+          border-radius: 999px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: capitalize;
+        }
+        .log-badge.ws-completed, .log-badge.ds-completed { background: #dcfce7; color: #15803d; }
+        .log-badge.ws-partial,   .log-badge.ds-partial   { background: #fef9c3; color: #a16207; }
+        .log-badge.ws-missed,    .log-badge.ds-missed    { background: #fee2e2; color: #b91c1c; }
+        .log-badge.ws-rest,      .log-badge.ds-rest      { background: #f1f5f9; color: #64748b; }
+        .log-mood { font-size: 1rem; }
+        .no-logs { color: var(--gray-400); font-size: 0.85rem; text-align: center; padding: 1rem 0; }
       `}</style>
 
 
